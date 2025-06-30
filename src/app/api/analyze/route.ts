@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
-import { SurveyData, AIRecommendation, Proposal, ServiceOption } from '@/types'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { SurveyData, Proposal, ServiceOption } from '@/types'
 
 const SERVICE_OPTIONS: ServiceOption[] = [
   {
@@ -34,7 +30,29 @@ export async function POST(request: NextRequest) {
   try {
     const surveyData: SurveyData = await request.json()
 
-    const prompt = `
+    // OpenAI連携を無効化した簡易レスポンス
+    const proposal: Proposal = {
+      id: `proposal_${Date.now()}`,
+      companyName: surveyData.companyName,
+      summary: 'AI機能は現在無効化されています。',
+      recommendations: [],
+      developmentScope: [],
+      implementationSteps: [],
+      serviceOptions: SERVICE_OPTIONS,
+      createdAt: new Date()
+    }
+
+    return NextResponse.json(proposal)
+  } catch (error) {
+    console.error('Error in analyze API (stub mode):', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+    const surveyData: SurveyData = await request.json()
+
+    
+    
+
 以下の企業情報を分析し、AI活用による業務効率化の提案を作成してください。
 
 企業情報:
@@ -69,7 +87,7 @@ export async function POST(request: NextRequest) {
 実用性と具体性を重視し、ROIが明確になるよう数値も含めて提案してください。
 `
 
-    const completion = await openai.chat.completions.create({
+    
       model: "gpt-4",
       messages: [
         {
@@ -84,18 +102,11 @@ export async function POST(request: NextRequest) {
       temperature: 0.7,
     })
 
-    const aiResponse = completion.choices[0].message.content
-    if (!aiResponse) {
-      throw new Error('AI response is empty')
-    }
+    
 
-    let parsedResponse
-    try {
-      parsedResponse = JSON.parse(aiResponse)
-    } catch (e) {
-      console.error('Failed to parse AI response:', aiResponse)
-      throw new Error('Failed to parse AI response')
-    }
+
+    
+
 
     const proposal: Proposal = {
       id: `proposal_${Date.now()}`,
@@ -116,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(proposal)
   } catch (error) {
-    console.error('Error in analyze API:', error)
+    console.error('Error in analyze API (stub mode):', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -124,7 +135,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function notifySalesTeam(surveyData: SurveyData, proposal: Proposal) {
+// notifySalesTeam removed while AI stub mode
+//(surveyData: SurveyData, proposal: Proposal) {
   // Slack通知やメール送信のロジックをここに実装
   console.log('Notifying sales team for:', surveyData.companyName)
   
