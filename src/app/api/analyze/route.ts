@@ -108,8 +108,11 @@ export async function POST(request: NextRequest) {
       createdAt: new Date()
     }
 
-    // 営業通知（実装例）
-    await notifySalesTeam(surveyData, proposal)
+    // 営業通知とCRM連携
+    if (process.env.NODE_ENV === 'production') {
+      // 本番環境でのみ通知を送信
+      await notifySalesTeam(surveyData, proposal)
+    }
 
     return NextResponse.json(proposal)
   } catch (error) {

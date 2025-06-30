@@ -129,6 +129,6 @@ function generateProposalHTML(proposal: Proposal): string {
 }
 
 // 提案データを保存する関数（実際の実装では不要）
-export function saveProposal(proposal: Proposal) {
+function saveProposal(proposal: Proposal) {
   proposals[proposal.id] = proposal
 }
