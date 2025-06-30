@@ -1,184 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Document, Page, Text, View, StyleSheet, PDFViewer, pdf } from '@react-pdf/renderer'
 import { Proposal } from '@/types'
 
 // 仮のデータストア（実際はデータベースから取得）
 const proposals: { [key: string]: Proposal } = {}
-
-const styles = StyleSheet.create({
-  page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
-    padding: 30,
-    fontFamily: 'Helvetica',
-  },
-  header: {
-    marginBottom: 20,
-    paddingBottom: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: '#2563eb',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#4b5563',
-    marginBottom: 5,
-  },
-  date: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 10,
-    paddingBottom: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  paragraph: {
-    fontSize: 12,
-    lineHeight: 1.5,
-    color: '#374151',
-    marginBottom: 10,
-  },
-  recommendationCard: {
-    marginBottom: 15,
-    padding: 15,
-    backgroundColor: '#f9fafb',
-    borderRadius: 5,
-  },
-  recommendationTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 5,
-  },
-  recommendationCategory: {
-    fontSize: 10,
-    color: '#2563eb',
-    backgroundColor: '#dbeafe',
-    padding: '2 8',
-    borderRadius: 3,
-    marginBottom: 8,
-  },
-  benefitsList: {
-    marginLeft: 10,
-  },
-  benefitItem: {
-    fontSize: 10,
-    color: '#374151',
-    marginBottom: 3,
-  },
-  stepItem: {
-    fontSize: 12,
-    color: '#374151',
-    marginBottom: 8,
-    paddingLeft: 15,
-  },
-  serviceCard: {
-    marginBottom: 15,
-    padding: 12,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 5,
-  },
-  serviceTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 5,
-  },
-  serviceDescription: {
-    fontSize: 10,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  serviceDetails: {
-    fontSize: 10,
-    color: '#374151',
-  },
-})
-
-const ProposalPDF = ({ proposal }: { proposal: Proposal }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.title}>AI活用提案書</Text>
-        <Text style={styles.subtitle}>{proposal.companyName} 様</Text>
-        <Text style={styles.date}>
-          作成日: {new Date(proposal.createdAt).toLocaleDateString('ja-JP')}
-        </Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>課題サマリー</Text>
-        <Text style={styles.paragraph}>{proposal.summary}</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>AI活用提案</Text>
-        {proposal.recommendations.map((rec, index) => (
-          <View key={index} style={styles.recommendationCard}>
-            <Text style={styles.recommendationTitle}>{rec.solution}</Text>
-            <Text style={styles.recommendationCategory}>{rec.category}</Text>
-            <Text style={styles.paragraph}>{rec.description}</Text>
-            
-            <Text style={[styles.paragraph, { fontWeight: 'bold' }]}>
-              期待される効果: {rec.timeSavingEstimate}時間/月の削減
-            </Text>
-            
-            <View style={styles.benefitsList}>
-              {rec.expectedBenefits.map((benefit, i) => (
-                <Text key={i} style={styles.benefitItem}>• {benefit}</Text>
-              ))}
-            </View>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>導入ステップ</Text>
-        {proposal.implementationSteps.map((step, index) => (
-          <Text key={index} style={styles.stepItem}>
-            {index + 1}. {step}
-          </Text>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>サービスメニュー</Text>
-        {proposal.serviceOptions.map((service, index) => (
-          <View key={index} style={styles.serviceCard}>
-            <Text style={styles.serviceTitle}>{service.name}</Text>
-            <Text style={styles.serviceDescription}>{service.description}</Text>
-            <Text style={styles.serviceDetails}>
-              期間: {service.duration} / 料金: {service.price}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>お問い合わせ</Text>
-        <Text style={styles.paragraph}>
-          本提案についてご質問やご相談がございましたら、お気軽にお問い合わせください。
-        </Text>
-        <Text style={styles.paragraph}>
-          3営業日以内に担当者よりご連絡させていただきます。
-        </Text>
-      </View>
-    </Page>
-  </Document>
-)
 
 export async function POST(request: NextRequest) {
   try {
@@ -193,12 +17,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const pdfBuffer = await pdf(<ProposalPDF proposal={proposal} />).toBuffer()
-
-    return new NextResponse(pdfBuffer, {
+    // シンプルなHTMLからPDFへの変換（将来的にはPuppeteerやjsPDFを使用）
+    const htmlContent = generateProposalHTML(proposal)
+    
+    return new NextResponse(htmlContent, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="AI活用提案書_${proposal.companyName}.pdf"`,
+        'Content-Type': 'text/html',
+        'Content-Disposition': `inline; filename="AI活用提案書_${proposal.companyName}.html"`,
       },
     })
   } catch (error) {
@@ -208,6 +33,99 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+function generateProposalHTML(proposal: Proposal): string {
+  return `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI活用提案書 - ${proposal.companyName}</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; margin-bottom: 30px; }
+    .company-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+    .date { opacity: 0.9; }
+    .section { margin-bottom: 30px; }
+    .section-title { font-size: 20px; font-weight: bold; color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; margin-bottom: 15px; }
+    .recommendation { background: #f8f9fa; padding: 20px; margin-bottom: 15px; border-radius: 8px; }
+    .recommendation-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; }
+    .category { background: #e3f2fd; color: #1565c0; padding: 4px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; display: inline-block; }
+    .benefits { margin-top: 15px; }
+    .benefit-item { margin-bottom: 5px; }
+    .service { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+    .service-title { font-weight: bold; margin-bottom: 8px; }
+    .print-styles { display: none; }
+    @media print {
+      .print-styles { display: block; }
+      body { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AI活用提案書</h1>
+    <div class="company-name">${proposal.companyName} 様</div>
+    <div class="date">作成日: ${new Date(proposal.createdAt).toLocaleDateString('ja-JP')}</div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">課題サマリー</h2>
+    <p>${proposal.summary}</p>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">AI活用提案</h2>
+    ${proposal.recommendations.map(rec => `
+      <div class="recommendation">
+        <div class="recommendation-title">${rec.solution}</div>
+        <span class="category">${rec.category}</span>
+        <p>${rec.description}</p>
+        <p><strong>期待される効果: ${rec.timeSavingEstimate}時間/月の削減</strong></p>
+        <div class="benefits">
+          ${rec.expectedBenefits.map(benefit => `<div class="benefit-item">• ${benefit}</div>`).join('')}
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">導入ステップ</h2>
+    ${proposal.implementationSteps.map((step, index) => `
+      <div>${index + 1}. ${step}</div>
+    `).join('')}
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">サービスメニュー</h2>
+    ${proposal.serviceOptions.map(service => `
+      <div class="service">
+        <div class="service-title">${service.name}</div>
+        <p>${service.description}</p>
+        <p>期間: ${service.duration} / 料金: ${service.price}</p>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">お問い合わせ</h2>
+    <p>本提案についてご質問やご相談がございましたら、お気軽にお問い合わせください。</p>
+    <p>3営業日以内に担当者よりご連絡させていただきます。</p>
+  </div>
+
+  <script>
+    // 自動的に印刷ダイアログを開く
+    window.onload = function() {
+      if (window.location.search.includes('print=true')) {
+        window.print();
+      }
+    }
+  </script>
+</body>
+</html>
+  `
 }
 
 // 提案データを保存する関数（実際の実装では不要）
