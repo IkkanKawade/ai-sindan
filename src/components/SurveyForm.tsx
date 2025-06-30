@@ -70,8 +70,8 @@ export default function SurveyForm({ onSubmit }: SurveyFormProps) {
       department: data.department,
       currentChallenges: selectedChallenges,
       workflowDescription: data.workflowDescription,
-      budget: data.budget,
-      timeline: data.timeline,
+      budget: data.budget || '',
+      timeline: data.timeline || '',
       contactInfo: {
         name: data.contactName,
         email: data.contactEmail,
