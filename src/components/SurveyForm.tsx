@@ -36,8 +36,22 @@ const TIMELINES = [
   '1ヶ月以内', '3ヶ月以内', '6ヶ月以内', '1年以内', '未定'
 ]
 
+type FormData = {
+  companyName: string
+  industry: string
+  employeeCount: string
+  department: string
+  workflowDescription: string
+  budget?: string
+  timeline?: string
+  contactName: string
+  contactEmail: string
+  contactPhone?: string
+  contactPosition?: string
+}
+
 export default function SurveyForm({ onSubmit }: SurveyFormProps) {
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<SurveyData>()
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>()
   const [selectedChallenges, setSelectedChallenges] = useState<string[]>([])
 
   const handleChallengeChange = (challenge: string) => {
@@ -48,15 +62,21 @@ export default function SurveyForm({ onSubmit }: SurveyFormProps) {
     )
   }
 
-  const onSubmitForm = (data: any) => {
+  const onSubmitForm = (data: FormData) => {
     const formattedData: SurveyData = {
-      ...data,
+      companyName: data.companyName,
+      industry: data.industry,
+      employeeCount: data.employeeCount,
+      department: data.department,
       currentChallenges: selectedChallenges,
+      workflowDescription: data.workflowDescription,
+      budget: data.budget,
+      timeline: data.timeline,
       contactInfo: {
         name: data.contactName,
         email: data.contactEmail,
-        phone: data.contactPhone,
-        position: data.contactPosition,
+        phone: data.contactPhone || '',
+        position: data.contactPosition || '',
       }
     }
     onSubmit(formattedData)
